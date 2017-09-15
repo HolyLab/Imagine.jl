@@ -19,7 +19,7 @@ function run_imagine{T<:AbstractString, S<:ImagineSignal}(base_name::T, sigs::Ve
         error("Empty signal list")
     end
     #Don't require a "sufficient" set of signals for an imaging experiment until this is a fully working alternative to Imagine (easier for testing)
-    ImagineInterface.validate_signals(sigs; check_is_sufficient = false)
+    ImagineInterface.validate_all(sigs; check_is_sufficient = false)
     ins = getinputs(sigs)
     outs = getoutputs(sigs)
     if isempty(outs)

@@ -5,8 +5,8 @@ using Base.Test
 srate = 100000*Unitful.s^-1
 pmin = 0.0*Unitful.μm
 pmax = 200.0*Unitful.μm
-stack_time = 4.0*Unitful.s
-reset_time = 3.0*Unitful.s
+stack_time = 3.0*Unitful.s
+reset_time = 2.0*Unitful.s
 exp_time = 0.011*Unitful.s
 flash_frac = 0.1 #fraction of time to keep laser on during exposure
 z_spacing = 3.1*Unitful.μm
@@ -26,7 +26,8 @@ ais = [pos_mon;]
 
 sigs = run_imagine("", vcat(aos,ais); ai_trig_dest = "PFI2", ao_trig_dest = "PFI1", trigger_source = "Port2/Line0")
 
-@test cor(ustrip(get_samples(sigs[1]; sampmap=:volts)), ustrip(get_samples(pos, sampmap=:volts))) >= 0.99
+c = cor(ustrip(get_samples(sigs[1]; sampmap=:volts)), ustrip(get_samples(pos, sampmap=:volts)))
+@test c >= 0.99
 
 
 

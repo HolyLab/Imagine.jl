@@ -12,7 +12,8 @@ function output_signals(sigs; dev = DEFAULT_DEVICE, trigger_terminal = "disabled
     rslt = []
     srate = samprate(first(sigs))
     nsamps = length(first(sigs))
-    bufsz = min(srate * 2*Unitful.s, nsamps)
+    #bufsz = min(srate * 2*Unitful.s, nsamps)
+    bufsz = min(10 * srate * 2*Unitful.s, nsamps)
     writesz = div(bufsz,2)
     if !isempty(sigsa)
         id_a = get_worker(;dev=dev)
@@ -54,7 +55,8 @@ function record_signals(base_name::AbstractString, sigs, nsamps::Integer; dev=DE
     rslt = []
     ready_chans = RemoteChannel{Channel{Int}}[]
     srate = samprate(first(sigs))
-    bufsz = min(srate * 2*Unitful.s, nsamps)
+    #bufsz = min(srate * 2*Unitful.s, nsamps)
+    bufsz = min(4* srate * 2*Unitful.s, nsamps)
     readsz = div(bufsz,2)
     if !isempty(sigsa)
         id_a = get_worker(;dev=dev)

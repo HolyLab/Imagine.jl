@@ -48,7 +48,7 @@ function run_imagine{T<:AbstractString, S<:ImagineSignal}(base_name::T, sigs::Ve
         push!(ids, take!(c))
     end
     if rig_name(first(sigs)) == "dummy-6002"
-        sleep(3.0) #this shouldn't be necessary, but it is (a digital trigger for AI was found inneffective immediately after the CfgDigEdgeStartTrig function returned with usb 6002)
+        sleep(6.0) #this shouldn't be necessary, but it is (a digital trigger for AI was found inneffective immediately after the CfgDigEdgeStartTrig function returned with usb 6002)
     end
     print("Triggering tasks...\n")
     ttl_pulse(; line_name = trigger_source) #P0.0 is wired to PFI0 and PFI1 for testing with usb 6002

@@ -44,8 +44,21 @@ function run_imagine{T<:AbstractString, S<:ImagineSignal}(base_name::T, sigs::Ve
         append!(rrs, rr)
     end
     print("Waiting for all tasks to become triggerable...\n")
-    for c in rchans
-        push!(ids, take!(c))
+    finished = falses(length(rchans))
+    while !all(finished)
+        for i in find(.!(finished))
+            c = rchans[i]
+            if isready(c)
+                push!(ids, take!(c))
+                finished[i] = true
+            end
+        end
+        for i = 1:length(rchans) #check for errors
+            if isready(rrs[i]) #shouldn't be ready yet, must be error
+                print("Error while preparing experiment:\n")
+                fetch(rrs[i])
+            end
+        end
     end
     if rig_name(first(sigs)) == "dummy-6002"
         sleep(6.0) #this shouldn't be necessary, but it is (a digital trigger for AI was found inneffective immediately after the CfgDigEdgeStartTrig function returned with usb 6002)

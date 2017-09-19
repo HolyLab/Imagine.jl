@@ -13,7 +13,12 @@ function ttl_pulse(;nsecs = 1.0, line_name = "Port0/Line0")
     return 0
 end
 
-function run_imagine{T<:AbstractString, S<:ImagineSignal}(base_name::T, sigs::Vector{S}; ai_trig_dest = "disabled", ao_trig_dest = "disabled", trigger_source = "Port0/Line0")
+function run_imagine{T<:AbstractString, S<:ImagineSignal}(base_name::T, sigs::Vector{S}; ai_trig_dest = "disabled", ao_trig_dest = "disabled", trigger_source = "Port0/Line0", sync_clocks = true)
+    sig1 = first(sigs)
+    if rig_name(sig1) == "dummy-6002" && sync_clocks
+        error("The usb-6002 device does not support clock synchronization.  Please set the sync_clocks kwarg to false")
+    end
+
     dev = DEFAULT_DEVICE
     if isempty(sigs)
         error("Empty signal list")
@@ -25,6 +30,20 @@ function run_imagine{T<:AbstractString, S<:ImagineSignal}(base_name::T, sigs::Ve
     if isempty(outs)
         error("No output channels found, so unable to guess the number of samples to acquire.  Use the record_signals function instead.")
     end
+    #determine shared clock source from first signal
+    clk_src = ""
+    if sync_clocks
+        if isoutput(sig1) && isdigital(sig1)
+            clk_src = "do/SampleClock"
+        elseif !isoutput(sig1) && isdigital(sig1)
+            clk_src = "di/SampleClock"
+        elseif isoutput(sig1) && !isdigital(sig1)
+            clk_src = "ao/SampleClock"
+        else
+            clk_src = "ai/Sampleclock"
+        end
+    end
+
     if length(WORKERS) < NPERSISTENT_WORKERS #currently we always keep 4 workers ready.  Could instead ready them on demand but so far this seems like a win.
         to_add = NPERSISTENT_WORKERS - length(WORKERS)
         new_workers = add_workers(to_add, dev)
@@ -34,12 +53,12 @@ function run_imagine{T<:AbstractString, S<:ImagineSignal}(base_name::T, sigs::Ve
     rrs = []
     ids = Int[]
     nsamps = length(first(outs))
-    (rchns_o, rr) = output_signals(outs; trigger_terminal = ao_trig_dest)
+    (rchns_o, rr) = output_signals(outs; trigger_terminal = ao_trig_dest, clock = clk_src)
     append!(rchans, rchns_o)
     append!(rrs, rr)
     if !isempty(ins)
         #TODO: insert more logic for digital signals, di_trig_dest
-        (rchns_i, rr) = record_signals(base_name, ins, nsamps; trigger_terminal = ai_trig_dest)
+        (rchns_i, rr) = record_signals(base_name, ins, nsamps; trigger_terminal = ai_trig_dest, clock = clk_src)
         append!(rchans, rchns_i)
         append!(rrs, rr)
     end

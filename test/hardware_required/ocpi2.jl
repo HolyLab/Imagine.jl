@@ -2,7 +2,7 @@ using Unitful, ImagineInterface, Imagine
 using Base.Test
 
 #modified from ImagineInterface test
-srate = 10000*Unitful.s^-1
+srate = 100000*Unitful.s^-1
 pmin = 0.0*Unitful.μm
 pmax = 200.0*Unitful.μm
 stack_time = 3.0*Unitful.s

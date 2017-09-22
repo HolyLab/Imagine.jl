@@ -13,18 +13,37 @@ function ttl_pulse(;nsecs = 1.0, line_name = "Port0/Line0")
     return 0
 end
 
-function run_imagine{T<:AbstractString, S<:ImagineSignal}(base_name::T, sigs::Vector{S}; ai_trig_dest = "disabled", ao_trig_dest = "disabled", trigger_source = "Port0/Line0")
+function run_imagine{T<:AbstractString, S<:ImagineSignal}(base_name::T, sigs::Vector{S}; ai_trig_dest = "disabled", ao_trig_dest = "disabled", trigger_source = "Port0/Line0", sync_clocks = true)
+    sig1 = first(sigs)
+    if rig_name(sig1) == "dummy-6002" && sync_clocks
+        error("The usb-6002 device does not support clock synchronization.  Please set the sync_clocks kwarg to false")
+    end
+
     dev = DEFAULT_DEVICE
     if isempty(sigs)
         error("Empty signal list")
     end
     #Don't require a "sufficient" set of signals for an imaging experiment until this is a fully working alternative to Imagine (easier for testing)
-    ImagineInterface.validate_signals(sigs; check_is_sufficient = false)
+    ImagineInterface.validate_all(sigs; check_is_sufficient = false)
     ins = getinputs(sigs)
     outs = getoutputs(sigs)
     if isempty(outs)
         error("No output channels found, so unable to guess the number of samples to acquire.  Use the record_signals function instead.")
     end
+    #determine shared clock source from first signal
+    clk_src = ""
+    if sync_clocks
+        if isoutput(sig1) && isdigital(sig1)
+            clk_src = "do/SampleClock"
+        elseif !isoutput(sig1) && isdigital(sig1)
+            clk_src = "di/SampleClock"
+        elseif isoutput(sig1) && !isdigital(sig1)
+            clk_src = "ao/SampleClock"
+        else
+            clk_src = "ai/Sampleclock"
+        end
+    end
+
     if length(WORKERS) < NPERSISTENT_WORKERS #currently we always keep 4 workers ready.  Could instead ready them on demand but so far this seems like a win.
         to_add = NPERSISTENT_WORKERS - length(WORKERS)
         new_workers = add_workers(to_add, dev)
@@ -34,29 +53,62 @@ function run_imagine{T<:AbstractString, S<:ImagineSignal}(base_name::T, sigs::Ve
     rrs = []
     ids = Int[]
     nsamps = length(first(outs))
-    (rchns_o, rr) = output_signals(outs; trigger_terminal = ao_trig_dest)
+    (rchns_o, rr) = output_signals(outs; trigger_terminal = ao_trig_dest, clock = clk_src)
     append!(rchans, rchns_o)
     append!(rrs, rr)
     if !isempty(ins)
         #TODO: insert more logic for digital signals, di_trig_dest
-        (rchns_i, rr) = record_signals(base_name, ins, nsamps; trigger_terminal = ai_trig_dest)
+        (rchns_i, rr) = record_signals(base_name, ins, nsamps; trigger_terminal = ai_trig_dest, clock = clk_src)
         append!(rchans, rchns_i)
         append!(rrs, rr)
     end
     print("Waiting for all tasks to become triggerable...\n")
-    for c in rchans
-        push!(ids, take!(c))
+    finished = falses(length(rchans))
+    #NOTE: this method of monitoring errors seems fragile.  The behavior of isready(::Future) may be changing in v0.7
+    #see docs for isready()
+    while !all(finished)
+        for i in find(.!(finished))
+            c = rchans[i]
+            if !isready(c)
+                if isready(rrs[i]) #shouldn't be ready yet, must be error
+                    print("Error while preparing experiment:\n")
+                    fetch(rrs[i])
+                end
+            else
+                push!(ids, take!(c))
+                finished[i] = true
+            end
+        end
     end
     if rig_name(first(sigs)) == "dummy-6002"
-        sleep(3.0) #this shouldn't be necessary, but it is (a digital trigger for AI was found inneffective immediately after the CfgDigEdgeStartTrig function returned with usb 6002)
+        sleep(6.0) #this shouldn't be necessary, but it is (a digital trigger for AI was found inneffective immediately after the CfgDigEdgeStartTrig function returned with usb 6002)
     end
     print("Triggering tasks...\n")
     ttl_pulse(; line_name = trigger_source) #P0.0 is wired to PFI0 and PFI1 for testing with usb 6002
-    for i = 1:length(rrs)
-        _sigs = fetch(rrs[i])
-        print("A task is finished.\n")
-        append!(sigs_out, _sigs)
+    rslts = Vector{Any}(length(rrs))
+    finished = falses(length(rrs))
+
+    while !all(finished)
+        for i = 1:length(rrs)
+            if !finished[i] && isready(rrs[i])
+                try
+                    rslts[i] = fetch(rrs[i])
+                    append!(sigs_out, rslts[i])
+                catch err
+                    rslts[i] = err
+                    print("ERROR ")
+                    showerror(Base.STDERR, err) #rslts[i] #can also test later with isa(rslts[i], RemoteException)
+                end
+                finished[i] = true
+            end
+        end
+        sleep(0.1)
     end
+
+    if any(x->isa(x, RemoteException), rslts)
+        error("One or more DAQ threads crashed.  See details in output above.")
+    end
+
     free_workers(ids)
     return sigs_out
 end

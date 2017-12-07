@@ -1,4 +1,4 @@
-deps = ["ImagineWorker"]
+deps = ["ImagineWorker", "ImagineInterface"]
 
 for dep in deps
     if Base.find_in_path(dep) == nothing

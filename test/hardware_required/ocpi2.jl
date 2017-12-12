@@ -26,7 +26,7 @@ ais = [pos_mon;]
 
 sigs = run_imagine("", vcat(aos,ais); ai_trig_dest = "PFI2", ao_trig_dest = "PFI1", trigger_source = "Port2/Line0")
 
-c = cor(ustrip(get_samples(sigs[1]; sampmap=:volts)), ustrip(get_samples(pos, sampmap=:volts)))
+c = cor(ustrip.(get_samples(sigs[1]; sampmap=:volts)), ustrip.(get_samples(pos, sampmap=:volts)))
 @test c >= 0.99
 
 

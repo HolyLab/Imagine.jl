@@ -39,7 +39,7 @@ end
     
 outbasename = "laser_pct_$pct_intensity"
 write_commands(outbasename*".json", ocpi2, 0, 0, 0.0s; isbidi = false, skip_validation=true)
-sigs = run_imagine(outbasename, [ao;ai]; ai_trig_dest = "PFI2", ao_trig_dest = "PFI1", trigger_source = "Port2/Line0")
+sigs = run_imagine(outbasename, [ao;ai]; ai_trig_dest = "PFI2", ao_trig_dest = "PFI1", trigger_source = "Port2/Line0", skip_validation=true)
 
 ai_sig = parse_ai(outbasename, ["AI0"], "ocpi-2", srate)
 smps = get_samples(ai_sig; sampmap=:volts)

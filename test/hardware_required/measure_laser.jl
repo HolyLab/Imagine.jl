@@ -14,7 +14,11 @@
 using Unitful, ImagineInterface, Imagine
 import Unitful:s, V
 
-pct_intensity = 10 #percent laser intensity this round
+#Note: when the meter reads 17.8mW the voltage output reads 0.378 V
+#This implies 47 W / V
+#This was with scaling set to level 5 (see intensity meter manual, model 1830-C)
+
+pct_intensity = 90 #percent laser intensity this round
 srate = 300000*Unitful.s^-1
 npulses_per_condition = 5
 
@@ -41,8 +45,12 @@ outbasename = "laser_pct_$pct_intensity"
 write_commands(outbasename*".json", ocpi2, 0, 0, 0.0s; isbidi = false, skip_validation=true)
 sigs = run_imagine(outbasename, [ao;ai]; ai_trig_dest = "PFI2", ao_trig_dest = "PFI1", trigger_source = "Port2/Line0", skip_validation=true)
 
-ai_sig = parse_ai(outbasename, ["AI0"], "ocpi-2", srate)
+ai_sig = parse_ai(outbasename*".ai", ["AI0"], "ocpi-2", srate)[1]
 smps = get_samples(ai_sig; sampmap=:volts)
+
+#using Plots
+#plotlyjs()
+#plot(ustrip.(smps.data))
 
 #c = cor(ustrip.(get_samples(sigs[1]; sampmap=:volts)), ustrip.(get_samples(pos, sampmap=:volts)))
 #ao2 = getoutputs(getanalog(ocpi2))[2]

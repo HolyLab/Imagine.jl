@@ -1,11 +1,11 @@
 #Note that the duration is software-timed so not precise
-function ttl_pulse(;nsecs = 1.0, line_name = "Port0/Line0")
+function ttl_pulse(;nsecs = 1.0, line_name = "Port0/line0")
     otsk = NIDAQ.digital_output(DEFAULT_DEVICE*line_name)
     try
         start(otsk)
-        write(otsk, [UInt8(true)])
+        write(otsk, [UInt32(true)]) #TODO: element type here is device-dependent (depends on number of lines per port)
         sleep(nsecs)
-        write(otsk, [UInt8(false)])
+        write(otsk, [UInt32(false)])
     finally
         stop(otsk)
         clear(otsk) 

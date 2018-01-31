@@ -13,7 +13,7 @@ function ttl_pulse(;nsecs = 1.0, line_name = "Port0/Line0")
     return 0
 end
 
-function run_imagine{T<:AbstractString, S<:ImagineSignal}(base_name::T, sigs::Vector{S}; ai_trig_dest = "disabled", ao_trig_dest = "disabled", trigger_source = "Port0/Line0", sync_clocks = true)
+function run_imagine{T<:AbstractString, S<:ImagineSignal}(base_name::T, sigs::Vector{S}; ai_trig_dest = "disabled", ao_trig_dest = "disabled", trigger_source = "Port0/Line0", sync_clocks = true, skip_validation = false)
     sig1 = first(sigs)
     if rig_name(sig1) == "dummy-6002" && sync_clocks
         error("The usb-6002 device does not support clock synchronization.  Please set the sync_clocks kwarg to false")
@@ -24,7 +24,9 @@ function run_imagine{T<:AbstractString, S<:ImagineSignal}(base_name::T, sigs::Ve
         error("Empty signal list")
     end
     #Don't require a "sufficient" set of signals for an imaging experiment until this is a fully working alternative to Imagine (easier for testing)
-    ImagineInterface.validate_all(sigs; check_is_sufficient = false)
+    if !skip_validation
+        ImagineInterface.validate_all(sigs; check_is_sufficient = false)
+    end
     ins = getinputs(sigs)
     outs = getoutputs(sigs)
     if isempty(outs)

@@ -13,7 +13,7 @@ function output_signals(sigs; dev = DEFAULT_DEVICE, trigger_terminal = "disabled
     srate = samprate(first(sigs))
     nsamps = length(first(sigs))
     bufsz_seconds = 5
-    bufsz = min(bufsz_seconds * srate * 2*Unitful.s, nsamps) #the NIDAQ buffer will be twice this large
+    bufsz = min(upreferred(bufsz_seconds*srate*2*Unitful.s), nsamps) #the NIDAQ buffer will be twice this large
     writesz = div(bufsz,2)
     if !isempty(sigsa)
         id_a = get_worker(;dev=dev)
@@ -56,7 +56,7 @@ function record_signals(base_name::AbstractString, sigs, nsamps::Integer; dev=DE
     ready_chans = RemoteChannel{Channel{Int}}[]
     srate = samprate(first(sigs))
     bufsz_seconds = 5
-    bufsz = min(bufsz_seconds * srate * 2*Unitful.s, nsamps) #the NIDAQ buffer will be twice this large
+    bufsz = min(upreferred(bufsz_seconds*srate*2*Unitful.s), nsamps) #the NIDAQ buffer will be twice this large
     readsz = div(bufsz,2)
     if !isempty(sigsa)
         id_a = get_worker(;dev=dev)

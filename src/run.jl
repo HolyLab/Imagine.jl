@@ -13,7 +13,7 @@ function ttl_pulse(;nsecs = 1.0, line_name = "Port0/line0")
     return 0
 end
 
-function run_imagine{T<:AbstractString, S<:ImagineSignal}(base_name::T, sigs::Vector{S}; ai_trig_dest = "disabled", ao_trig_dest = "disabled", trigger_source = "Port0/Line0", sync_clocks = true, skip_validation = false)
+function run_imagine(base_name::T, sigs::Vector{S}; ai_trig_dest = "disabled", ao_trig_dest = "disabled", trigger_source = "Port0/Line0", sync_clocks = true, skip_validation = false) where {T<:AbstractString, S<:ImagineSignal}
     sig1 = first(sigs)
     if rig_name(sig1) == "dummy-6002" && sync_clocks
         error("The usb-6002 device does not support clock synchronization.  Please set the sync_clocks kwarg to false")

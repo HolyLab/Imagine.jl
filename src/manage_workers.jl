@@ -1,10 +1,10 @@
 #ImagineWorker._set_device(DEFAULT_DEVICE) #set local device
 
 #TODO? switch to remotecall_eval or @everywhere expr procs? new in julia 0.7.  See Julia #22589 on github
-set_device{T<:AbstractString}(dev_name::T, pid::Int) = remotecall_fetch(Core.eval, pid, Main, :(ImagineWorker._set_device($dev_name)))
+set_device(dev_name::T, pid::Int) where {T<:AbstractString} = remotecall_fetch(Core.eval, pid, Main, :(ImagineWorker._set_device($dev_name)))
 
 #sets device for driver process and all workers
-function set_device{T<:AbstractString}(dev_name::T)
+function set_device(dev_name::T) where T<:AbstractString
     global DEFAULT_DEVICE = String(dev_name)
     map(pid->set_device(dev_name, pid), WORKERS)
 end

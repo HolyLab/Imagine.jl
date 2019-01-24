@@ -13,39 +13,51 @@ function ttl_pulse(;nsecs = 1.0, line_name = "Port0/line0")
     return 0
 end
 
-function run_imagine(base_name::T, sigs::Vector{S}; ai_trig_dest = "disabled", ao_trig_dest = "disabled", trigger_source = "Port0/Line0", sync_clocks = true, skip_validation = false) where {T<:AbstractString, S<:ImagineSignal}
+function sampleclockstring(sig1)
+    if isoutput(sig1) && isdigital(sig1)
+        return "do/SampleClock"
+    elseif !isoutput(sig1) && isdigital(sig1)
+        return "di/SampleClock"
+    elseif isoutput(sig1) && !isdigital(sig1)
+        return "ao/SampleClock"
+    else
+        return "ai/Sampleclock"
+    end
+end
+
+function check_valid(sigs, sync_clocks::Bool, skip_ii_validation::Bool)
+    if isempty(sigs)
+        error("Empty signal list")
+    end
     sig1 = first(sigs)
     if rig_name(sig1) == "dummy-6002" && sync_clocks
         error("The usb-6002 device does not support clock synchronization.  Please set the sync_clocks kwarg to false")
     end
-
-    dev = DEFAULT_DEVICE
-    if isempty(sigs)
-        error("Empty signal list")
-    end
     #Don't require a "sufficient" set of signals for an imaging experiment until this is a fully working alternative to Imagine (easier for testing)
-    if !skip_validation
+    if !skip_ii_validation
         ImagineInterface.validate_all(sigs; check_is_sufficient = false)
     end
-    ins = getinputs(sigs)
     outs = getoutputs(sigs)
     if isempty(outs)
         error("No output channels found, so unable to guess the number of samples to acquire.  Use the record_signals function instead.")
     end
-    #determine shared clock source from first signal
-    clk_src = ""
-    if sync_clocks
-        if isoutput(sig1) && isdigital(sig1)
-            clk_src = "do/SampleClock"
-        elseif !isoutput(sig1) && isdigital(sig1)
-            clk_src = "di/SampleClock"
-        elseif isoutput(sig1) && !isdigital(sig1)
-            clk_src = "ao/SampleClock"
-        else
-            clk_src = "ai/Sampleclock"
-        end
-    end
+    nothing
+end
 
+function run_imagine(base_name::T, sigs::Vector{S};
+				   ai_trig_dest = "disabled",
+				   ao_trig_dest = "disabled",
+				   trigger_source = "Port0/Line0",
+				   sync_clocks = true,
+				   run_locally = false,
+				   skip_validation = false) where {T<:AbstractString, S<:ImagineSignal}
+    check_valid(sigs, sync_clocks, skip_validation)
+    sig1 = first(sigs)
+    ins = getinputs(sigs)
+    outs = getoutputs(sigs)
+    #determine shared clock source from first signal
+    clk_src = sync_clocks ? sampleclockstring(sig1) : ""
+    dev = DEFAULT_DEVICE
     if length(WORKERS) < NPERSISTENT_WORKERS #currently we always keep 4 workers ready.  Could instead ready them on demand but so far this seems like a win.
         to_add = NPERSISTENT_WORKERS - length(WORKERS)
         new_workers = add_workers(to_add, dev)
@@ -55,21 +67,21 @@ function run_imagine(base_name::T, sigs::Vector{S}; ai_trig_dest = "disabled", a
     rrs = []
     ids = Int[]
     nsamps = length(first(outs))
-    (rchns_o, rr) = output_signals(outs; trigger_terminal = ao_trig_dest, clock = clk_src)
+    (rchns_o, rr) = output_signals(outs; trigger_terminal = ao_trig_dest, clock = clk_src, run_locally = run_locally)
     append!(rchans, rchns_o)
     append!(rrs, rr)
     if !isempty(ins)
         #TODO: insert more logic for digital signals, di_trig_dest
-        (rchns_i, rr) = record_signals(base_name, ins, nsamps; trigger_terminal = ai_trig_dest, clock = clk_src)
+        (rchns_i, rr) = record_signals(base_name, ins, nsamps; trigger_terminal = ai_trig_dest, clock = clk_src, run_locally = run_locally)
         append!(rchans, rchns_i)
         append!(rrs, rr)
     end
-    print("Waiting for all tasks to become triggerable...\n")
+    print("Preparing all DAQ tasks...\n")
     finished = falses(length(rchans))
     #NOTE: this method of monitoring errors seems fragile.  The behavior of isready(::Future) may be changing in v0.7
     #see docs for isready()
     while !all(finished)
-        for i in find(.!(finished))
+        for i in findall(.!(finished))
             c = rchans[i]
             if !isready(c)
                 if isready(rrs[i]) #shouldn't be ready yet, must be error
@@ -83,11 +95,11 @@ function run_imagine(base_name::T, sigs::Vector{S}; ai_trig_dest = "disabled", a
         end
     end
     if rig_name(first(sigs)) == "dummy-6002"
-        sleep(6.0) #this shouldn't be necessary, but it is (a digital trigger for AI was found inneffective immediately after the CfgDigEdgeStartTrig function returned with usb 6002)
+        sleep(4.0) #this shouldn't be necessary, but it is (a digital trigger for AI was found inneffective immediately after the CfgDigEdgeStartTrig function returned with usb 6002)
     end
     print("Triggering tasks...\n")
     ttl_pulse(; line_name = trigger_source) #P0.0 is wired to PFI0 and PFI1 for testing with usb 6002
-    rslts = Vector{Any}(length(rrs))
+    rslts = Vector{Any}(undef, length(rrs))
     finished = falses(length(rrs))
 
     while !all(finished)
@@ -99,7 +111,7 @@ function run_imagine(base_name::T, sigs::Vector{S}; ai_trig_dest = "disabled", a
                 catch err
                     rslts[i] = err
                     print("ERROR ")
-                    showerror(Base.STDERR, err) #rslts[i] #can also test later with isa(rslts[i], RemoteException)
+                    showerror(Base.stderr, err) #rslts[i] #can also test later with isa(rslts[i], RemoteException)
                 end
                 finished[i] = true
             end

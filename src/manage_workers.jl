@@ -1,7 +1,4 @@
-#ImagineWorker._set_device(DEFAULT_DEVICE) #set local device
-
-#TODO? switch to remotecall_eval or @everywhere expr procs? new in julia 0.7.  See Julia #22589 on github
-set_device(dev_name::T, pid::Int) where {T<:AbstractString} = remotecall_fetch(Core.eval, pid, Main, :(ImagineWorker._set_device($dev_name)))
+set_device(dev_name::T, pid::Int) where {T<:AbstractString} = Distributed.remotecall_eval(ImagineWorker, pid, :(_set_device($dev_name)))
 
 #sets device for driver process and all workers
 function set_device(dev_name::T) where T<:AbstractString
@@ -9,16 +6,24 @@ function set_device(dev_name::T) where T<:AbstractString
     map(pid->set_device(dev_name, pid), WORKERS)
 end
 
+function load_worker_code(id)
+    Distributed.remotecall_eval(Main, id, :(using Pkg))
+    Distributed.remotecall_eval(Main, id, :(Pkg.activate(".")))
+    Distributed.remotecall_eval(Main, id, :(using ImagineInterface))
+    Distributed.remotecall_eval(Main, id, :(using Imagine)) #not sure why this one's needed, but bringing Imagine into scope avoids a cryptic Serialization error
+    Distributed.remotecall_eval(Main, id, :(using ImagineWorker))
+end
+
 function add_workers(n::Int, dev=DEFAULT_DEVICE)
-    ids = addprocs(n)
+    ids = addprocs(n; dir=joinpath(@__DIR__, ".."))
     append!(FREE_WORKERS, ids)
     append!(WORKERS, ids)
-    rslts = Future[]
-    for i = 1:length(ids)
-        print("Initializing new worker process...\n")
-        push!(rslts, remotecall(Core.eval, ids[i], Main, :(import ImagineWorker)))
+    @sync begin
+        print("Initializing $n new worker processes...\n")
+        for i = 1:length(ids)
+	    @async load_worker_code(ids[i])
+        end
     end
-    map(fetch, rslts)
     for i = 1:length(ids)
         set_device(dev, ids[i])
     end
@@ -47,11 +52,11 @@ function free_workers(proc_ids::Vector{Int})
         if length(WORKERS) > NPERSISTENT_WORKERS
             print("Freeing worker AND removing process\n")
             rmprocs(proc_id)
-            deleteat!(WORKERS, find(x->x==proc_id, WORKERS))
-            deleteat!(USED_WORKERS, find(x->x==proc_id, USED_WORKERS))
+            deleteat!(WORKERS, findall(x->x==proc_id, WORKERS))
+            deleteat!(USED_WORKERS, findall(x->x==proc_id, USED_WORKERS))
         else
             push!(FREE_WORKERS, proc_id)
-            deleteat!(USED_WORKERS, find(x->x==proc_id, USED_WORKERS))
+            deleteat!(USED_WORKERS, findall(x->x==proc_id, USED_WORKERS))
         end
     end
     return FREE_WORKERS

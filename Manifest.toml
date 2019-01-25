@@ -21,11 +21,11 @@ version = "0.8.10"
 
 [[BinaryProvider]]
 deps = ["Libdl", "Pkg", "SHA", "Test"]
-git-tree-sha1 = "5217b018d7dfe1997326749944fd01f5ee22144d"
+git-tree-sha1 = "055eb2690182ebc31087859c3dd8598371d3ef9e"
 repo-rev = "cjg/fixwindows"
 repo-url = "../BinaryProvider"
 uuid = "b99e7846-7c00-51b0-8f62-c81ae34c0232"
-version = "0.5.3+"
+version = "0.5.3"
 
 [[ColorTypes]]
 deps = ["FixedPointNumbers", "Random", "Test"]
@@ -216,8 +216,8 @@ version = "0.4.0"
 uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 
 [[NIDAQ]]
-deps = ["Libdl"]
-git-tree-sha1 = "56985c0a69d7d4c0e1b4c09c69a642f01ae49954"
+deps = ["Libdl", "LinearAlgebra"]
+git-tree-sha1 = "0ac5dd67c9001f101a10d38d09492bd3885b1127"
 repo-rev = "cjg/julia7"
 repo-url = "../NIDAQ"
 uuid = "66b72792-1abf-55ab-8064-6e9051317175"
@@ -312,9 +312,9 @@ uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [[SpecialFunctions]]
 deps = ["BinDeps", "BinaryProvider", "Libdl", "Test"]
-path = "C:\\Users\\user\\.julia\\dev\\SpecialFunctions"
+git-tree-sha1 = "0b45dc2e45ed77f445617b99ff2adf0f5b0f23ea"
 uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
-version = "0.7.2+"
+version = "0.7.2"
 
 [[Statistics]]
 deps = ["LinearAlgebra", "SparseArrays"]

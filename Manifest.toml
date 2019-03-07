@@ -47,15 +47,15 @@ version = "0.9.5"
 
 [[Compat]]
 deps = ["Base64", "Dates", "DelimitedFiles", "Distributed", "InteractiveUtils", "LibGit2", "Libdl", "LinearAlgebra", "Markdown", "Mmap", "Pkg", "Printf", "REPL", "Random", "Serialization", "SharedArrays", "Sockets", "SparseArrays", "Statistics", "Test", "UUIDs", "Unicode"]
-git-tree-sha1 = "ec61a16eed883ad0cfa002d7489b3ce6d039bb9a"
+git-tree-sha1 = "195a3ffcb8b0762684b6821de18f83a16455c6ea"
 uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
-version = "1.4.0"
+version = "2.0.0"
 
 [[Conda]]
 deps = ["Compat", "JSON", "VersionParsing"]
-git-tree-sha1 = "fb86fe40cb5b35990e368709bfdc1b46dbb99dac"
+git-tree-sha1 = "b625d802587c2150c279a40a646fba63f9bd8187"
 uuid = "8f4d0f93-b110-5947-807f-2305c1781a2d"
-version = "1.1.1"
+version = "1.2.0"
 
 [[DSP]]
 deps = ["AbstractFFTs", "Compat", "FFTW", "LinearAlgebra", "Polynomials", "Random", "Reexport", "SpecialFunctions"]
@@ -113,15 +113,15 @@ version = "0.5.0"
 
 [[ImageCore]]
 deps = ["ColorTypes", "Colors", "FFTW", "FixedPointNumbers", "Graphics", "MappedArrays", "OffsetArrays", "PaddedViews", "Random", "Statistics", "Test"]
-git-tree-sha1 = "5e7b1f49c80541860e08a7ea91805a24c1641f19"
+git-tree-sha1 = "bd41f7febe7b4d7914c08c5b6d0a69dcd627e3b9"
 uuid = "a09fc81d-aa75-5fe9-8630-4744c3626534"
-version = "0.7.3"
+version = "0.7.4"
 
 [[ImageMetadata]]
 deps = ["AxisArrays", "ColorVectorSpace", "Colors", "Dates", "FixedPointNumbers", "ImageAxes", "ImageCore", "IndirectArrays", "Statistics", "Test"]
-git-tree-sha1 = "e8763955937114ea15cf3bfb5ae00588e19b58c3"
+git-tree-sha1 = "b389b1eb7145ddd37ebd25f42a387213dc1a18f8"
 uuid = "bc367c6b-8a6b-528e-b4bd-a4b897500b49"
-version = "0.5.2"
+version = "0.6.1"
 
 [[ImagineFormat]]
 deps = ["AxisArrays", "FileIO", "FixedPointNumbers", "ImageMetadata", "Random", "SharedArrays", "Test", "Unitful"]
@@ -139,9 +139,9 @@ version = "0.0.0"
 
 [[ImagineInterface]]
 deps = ["AxisArrays", "DSP", "DataStructures", "ImagineFormat", "ImagineHardware", "IntervalSets", "JSON", "MappedArrays", "Mmap", "Pkg", "Random", "Statistics", "UnitAliases", "Unitful"]
-path = "..\\ImagineInterface"
+git-tree-sha1 = "c1d1efe7a582e9d80eb11523f1234b378665cf62"
 uuid = "a9d8408c-0fb1-11e9-0067-cb067474114e"
-version = "0.1.0"
+version = "0.0.0"
 
 [[ImagineWorker]]
 deps = ["Distributed", "ImagineFormat", "ImagineInterface", "NIDAQ", "Unitful"]
@@ -192,9 +192,9 @@ uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
 
 [[MacroTools]]
 deps = ["Compat"]
-git-tree-sha1 = "c443e1c8d58a4e9f61b708ad0a88286c7042145b"
+git-tree-sha1 = "3fd1a3022952128935b449c33552eb65895380c1"
 uuid = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
-version = "0.4.4"
+version = "0.4.5"
 
 [[MappedArrays]]
 deps = ["Test"]
@@ -217,7 +217,7 @@ uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 
 [[NIDAQ]]
 deps = ["Libdl", "LinearAlgebra"]
-git-tree-sha1 = "0ac5dd67c9001f101a10d38d09492bd3885b1127"
+git-tree-sha1 = "d9850a0ecdb3822a9a964f7b77b01f14e8baf9ba"
 repo-rev = "cjg/julia7"
 repo-url = "../NIDAQ"
 uuid = "66b72792-1abf-55ab-8064-6e9051317175"
@@ -231,9 +231,9 @@ version = "0.3.2"
 
 [[OffsetArrays]]
 deps = ["DelimitedFiles", "Test"]
-git-tree-sha1 = "7d1442cb06fbfbc4fea936c3c56b38daffd22d3b"
+git-tree-sha1 = "e6893807f09c1d5517861ded8b203cb96cb7d44a"
 uuid = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
-version = "0.9.1"
+version = "0.10.0"
 
 [[OrderedCollections]]
 deps = ["Random", "Serialization", "Test"]
@@ -322,9 +322,9 @@ uuid = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [[StatsBase]]
 deps = ["DataStructures", "DelimitedFiles", "LinearAlgebra", "Missings", "Printf", "Random", "SortingAlgorithms", "SparseArrays", "Statistics", "Test"]
-git-tree-sha1 = "7b596062316c7d846b67bf625d5963a832528598"
+git-tree-sha1 = "435707791dc85a67d98d671c1c3fcf1b20b00f94"
 uuid = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
-version = "0.27.0"
+version = "0.29.0"
 
 [[Test]]
 deps = ["Distributed", "InteractiveUtils", "Logging", "Random"]
@@ -351,9 +351,9 @@ version = "0.0.0"
 
 [[Unitful]]
 deps = ["LinearAlgebra", "Random", "Test"]
-git-tree-sha1 = "ba654182cad07cd6c1f3ae969475e556db3283ea"
+git-tree-sha1 = "cef7da6d4e9735fae7c11cd28e77b76fd87db468"
 uuid = "1986cc42-f94f-5a68-af5c-568840ba703d"
-version = "0.14.0"
+version = "0.12.0"
 
 [[VersionParsing]]
 deps = ["Compat"]

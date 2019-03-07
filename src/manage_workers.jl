@@ -7,10 +7,10 @@ function set_device(dev_name::T) where T<:AbstractString
 end
 
 function load_worker_code(id)
-    Distributed.remotecall_eval(Main, id, :(using Pkg))
-    Distributed.remotecall_eval(Main, id, :(Pkg.activate(".")))
+    #below was suggested by a julia issue but seems unnecessary now
+    #Distributed.remotecall_eval(Main, id, :(using Pkg))
+    #Distributed.remotecall_eval(Main, id, :(Pkg.activate(".")))
     Distributed.remotecall_eval(Main, id, :(using ImagineInterface))
-    Distributed.remotecall_eval(Main, id, :(using Imagine)) #not sure why this one's needed, but bringing Imagine into scope avoids a cryptic Serialization error
     Distributed.remotecall_eval(Main, id, :(using ImagineWorker))
 end
 
@@ -18,9 +18,10 @@ function add_workers(n::Int, dev=DEFAULT_DEVICE)
     ids = addprocs(n; dir=joinpath(@__DIR__, ".."))
     append!(FREE_WORKERS, ids)
     append!(WORKERS, ids)
+    print("Initializing $n new worker processes...\n")
+    load_worker_code(ids[1])
     @sync begin
-        print("Initializing $n new worker processes...\n")
-        for i = 1:length(ids)
+        for i = 2:length(ids)
 	    @async load_worker_code(ids[i])
         end
     end

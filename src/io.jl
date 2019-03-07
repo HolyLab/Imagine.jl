@@ -17,25 +17,27 @@ function output_signals(sigs; dev = DEFAULT_DEVICE, trigger_terminal = "disabled
     writesz = div(bufsz,2)
     if !isempty(sigsa)
         rchan = RemoteChannel(()->Channel{Int}(1))
+        rexp = :(_output_analog_signals($sigsa, $writesz, $trigger_terminal, $rchan, $clock))
         if !run_locally
             id_a = get_worker(;dev=dev)
-            tmp = @spawnat id_a _output_analog_signals(sigsa, writesz, trigger_terminal, rchan, clock)
+            tmp = remotecall(Core.eval, id_a, Main, rexp)
             push!(rslt, tmp)
         else
             set_device(dev, myid())
-            ImagineWorker._output_analog_signals(sigsa, writesz, trigger_terminal, rchan, clock)
+            Core.eval(rexp)
         end
         push!(ready_chans, rchan)
     end
     if !isempty(sigsd)
         rchan = RemoteChannel(()->Channel{Int}(1))
+        rexp = :(_output_digital_signals($sigsd, $writesz, $trigger_terminal, $rchan, $clock))
         if !run_locally
             id_d = get_worker(;dev=dev)
-            tmp =  @spawnat id_d _output_digital_signals(sigsd, writesz, trigger_terminal, rchan, clock)
+            tmp = remotecall(Core.eval, id_d, Main, rexp)
             push!(rslt, tmp)
         else
             set_device(dev, myid())
-            ImagineWorker._output_digital_signals(sigsd, writesz, trigger_terminal, rchan, clock)
+            Core.eval(rexp)
         end
         push!(ready_chans, rchan)
     end    
@@ -64,13 +66,14 @@ function record_signals(base_name::AbstractString, sigs, nsamps::Integer; dev=DE
     if !isempty(sigsa)
         rchan = RemoteChannel(()->Channel{Int}(1))
         file_name = isempty(base_name) ? base_name : base_name * ".ai"
+        rexp = :(_record_analog_signals($file_name, $sigsa, $nsamps, $readsz, $trigger_terminal, $rchan, $clock))
         if !run_locally
             id_a = get_worker(;dev=dev)
-            tmp = @spawnat id_a _record_analog_signals(file_name, sigsa, nsamps, readsz, trigger_terminal, rchan, clock)
+            tmp = remotecall(Core.eval, id_a, Main, rexp)
             push!(rslt, tmp)
         else
             set_device(dev, myid())
-            tmp = @spawnat myid() _record_analog_signals(file_name, sigsa, nsamps, readsz, trigger_terminal, rchan, clock)
+            tmp = remotecall(Core.eval, myid(), Main, rexp)
 	    push!(rslt, tmp)
         end
         push!(ready_chans, rchan)
@@ -79,13 +82,14 @@ function record_signals(base_name::AbstractString, sigs, nsamps::Integer; dev=DE
         rchan = RemoteChannel(()->Channel{Int}(1))
         file_name = isempty(base_name) ? base_name : base_name * ".di"
         push!(ready_refs, RemoteChannel{Int}(1))
+        rexp = :(_record_digital_signals($file_name, $sigsd, $nsamps, $readsz, $trigger_terminal, $rchan, $clock))
         if !run_locally
             id_d = get_worker(;dev=dev)
-            tmp = @spawnat id_d _record_digital_signals(file_name, sigsa, nsamps, readsz, trigger_terminal, rchan, clock)
+            tmp = remotecall(Core.eval, id_d, Main, rexp)
             push!(rslt, tmp)
         else
             set_device(dev, myid())
-            tmp = @spawnat myd() _record_digital_signals(file_name, sigsd, nsamps, readsz, trigger_terminal, rchan, clock)
+            tmp = remotecall(Core.eval, myid(), Main, rexp)
 	    push!(rslt, tmp)
         end
         push!(ready_chans, rchan)

@@ -1,7 +1,7 @@
 using Unitful, ImagineInterface, Imagine, Statistics
 using Test
 
-#NOTE: the piezo should be turned on, connected, and in open loop mode in order for this test to pass
+#NOTE: the piezo should be turned on, connected, and in closed loop mode in order for this test to pass
 srate = 100000*Unitful.s^-1
 pmin = 0.0*Unitful.μm
 pmax = 200.0*Unitful.μm

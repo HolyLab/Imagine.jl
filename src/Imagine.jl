@@ -1,7 +1,7 @@
 module Imagine
 
 using ImagineInterface, Unitful, Distributed
-using ImagineWorker
+import ImagineWorker
 
 #ENV["JULIA_PROJECT"] = joinpath(@__DIR__, "..")
 

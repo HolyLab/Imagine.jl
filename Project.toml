@@ -1,6 +1,6 @@
 name = "Imagine"
 uuid = "28fce3f0-1dbc-11e9-10e3-e71e6ceb4e7c"
-version = "0.1.0"
+version = "0.1.2"
 
 [deps]
 Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
